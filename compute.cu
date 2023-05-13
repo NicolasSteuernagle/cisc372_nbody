@@ -43,7 +43,6 @@ void compute() {
     for (int i = 0; i < NUMENTITIES; i++)
         accels[i] = &values[i * NUMENTITIES];
 
-    // Allocate memory on the GPU
     vector3* d_accels;
     cudaMalloc((void**)&d_accels, sizeof(vector3) * NUMENTITIES * NUMENTITIES);
     vector3* d_hPos;
@@ -53,23 +52,18 @@ void compute() {
     double* d_mass;
     cudaMalloc((void**)&d_mass, sizeof(double) * NUMENTITIES);
 
-    // Transfer data from CPU to GPU
     cudaMemcpy(d_hPos, hPos, sizeof(vector3) * NUMENTITIES, cudaMemcpyHostToDevice);
     cudaMemcpy(d_hVel, hVel, sizeof(vector3) * NUMENTITIES, cudaMemcpyHostToDevice);
         cudaMemcpy(d_mass, mass, sizeof(double) * NUMENTITIES, cudaMemcpyHostToDevice);
 
-    // Define the grid and block dimensions for the CUDA kernel
     int blockSize = 256;
     int gridSize = (NUMENTITIES + blockSize - 1) / blockSize;
 
-    // Launch the CUDA kernel
     computeKernel<<<gridSize, blockSize>>>(d_accels, d_hPos, d_hVel, d_mass);
 
-    // Transfer the results back from GPU to CPU
     cudaMemcpy(hPos, d_hPos, sizeof(vector3) * NUMENTITIES, cudaMemcpyDeviceToHost);
     cudaMemcpy(hVel, d_hVel, sizeof(vector3) * NUMENTITIES, cudaMemcpyDeviceToHost);
 
-    // Free the GPU memory
     cudaFree(d_accels);
     cudaFree(d_hPos);
     cudaFree(d_hVel);
